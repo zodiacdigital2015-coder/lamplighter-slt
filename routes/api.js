@@ -1,15 +1,19 @@
 /**
- * API endpoints for OpenAI powered recipe generation.
+ * API endpoints for Lamp Lighter: Quality Assurance Edition
+ * - Handles "Strict Ofsted Mode" vs "General Quality Mode"
+ * - Generates DUAL OUTPUTS (Copilot + ChatGPT)
+ * - References Knowledge Base
+ * - Handles Defaults
+ * - ENFORCES SINGLE RESULT (Temperature 0.2)
+ * - ADDS DEPTH REQUIREMENT (Cites specific evidence)
  */
 const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
-const openai = require('openai');
+const OpenAI = require('openai'); 
 const zod = require('zod');
 const { zodResponseFormat } = require("openai/helpers/zod");
-
-const { setInitError } = require('../utils/initStatus');
 
 // -- API Key Setup --
 let openai_api_key = "";
@@ -19,137 +23,139 @@ if (fs.existsSync(apiKeyPath)) {
     try {
         openai_api_key = fs.readFileSync(apiKeyPath, 'utf8').trim();
     } catch (err) {
-        setInitError('Cannot read OpenAI API Key.');
+        console.error('Cannot read OpenAI API Key file.');
     }
 } else if (process.env.OPENAI_API_KEY) {
     openai_api_key = process.env.OPENAI_API_KEY;
 } else {
-    setInitError('Cannot establish OpenAI API Key.');
+    console.error('No API Key found. The app will likely fail to generate.');
 }
 
-const API_CONFIG = { apiKey: openai_api_key };
+// -- Initialize OpenAI Client --
+const openai = new OpenAI({
+    apiKey: openai_api_key, 
+});
+
 const PRIMARY_MODEL = "gpt-4o"; 
-const PREVIEW_MODEL = "gpt-4o-mini";
 
-// -- Zod Schemas for Structured Output --
-
+// -- Zod Schema --
 const GeneratedPromptWithReason = zod.object({
     prompt_heading: zod.string(),
-    prompt: zod.string(),
+    copilot_prompt: zod.string(),
+    chatgpt_prompt: zod.string(),
     reason_for_choosing: zod.string(),
 });
 
-const GeneratedPromptWithReasonList = zod.object({
+const GeneratedPromptList = zod.object({
     prompts: zod.array(GeneratedPromptWithReason),
 });
 
-const GeneratedPromptVariation = zod.object({
-    prompt: zod.string(),
-    what_makes_it_different: zod.string(),
-});
-
-const GeneratedPromptVariationList = zod.object({
-    prompts: zod.array(GeneratedPromptVariation),
-});
-
-// -- Middleware to log API calls --
-router.use((req, res, next) => {
-    next();
-});
-
-// -- Async Handler Wrapper --
-const asyncHandler = fn => (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-};
-
-
 /**
  * POST /api/generatePrompts
- * Generates a structured Teacher Prompt based on Level, Subject, Unit, LO, Activity Type
  */
-router.post('/generatePrompts', asyncHandler(async (req, res, next) => {
+router.post('/generatePrompts', async (req, res) => {
+    try {
+        let { 
+            level,              
+            subject,            
+            unit,               
+            learningOutcome,    
+            activityCategory,   
+            activityType,       
+            topic               
+        } = req.body;
 
-    // 1. Extract plain text values from the request
-    const level = req.body.level || "FE Level";
-    const subject = req.body.subject || "General";
-    const unit = req.body.unit || "";
-    const learningOutcome = req.body.learningOutcome || "";
-    const topic = (req.body.topic || "").toLowerCase();
-    
-    // THE CHANGE: We take the full text directly from the menu
-    // If they picked "Assessments" -> "MCQ", this string is "Multiple Choice Questions (MCQ)"
-    const activityDescription = req.body.activityType || "a suitable learning activity";
+        // -- DEFAULTS LOGIC --
+        level = level || "General FE Provision";
+        subject = subject || "Cross-College / All Departments";
+        unit = unit || "General Quality Standards";
+        learningOutcome = learningOutcome || "Analysis & Review";
+        
+        if (!topic || topic.trim() === "") {
+            topic = "The user will provide specific evidence/documents in the next step.";
+        }
 
-    // 2. Build the System Instruction
-    // We tell the AI to create whatever the user asked for
-    const systemPrompt = `
-You are an expert pedagogical consultant for Further Education (FE). 
-Your task is to write a high-quality "AI Prompt" that a teacher can copy and paste into a tool like ChatGPT.
+        // 1. Determine "Mode"
+        const isStrictOfstedMode = ["SAR", "QIP", "Inspection Prep", "Deep Dive"].includes(activityCategory);
 
-The teacher wants an AI prompt that will generate: ${activityDescription}.
+        let systemInstruction = "";
 
-When writing this prompt for the teacher:
-- Contextualise it for the subject: ${subject} (${level}).
-- Explicitly mention the Unit: "${unit}" and Learning Outcome: "${learningOutcome}" (if provided).
-- Ensure the prompt asks for output suitable for 16-19 year old learners.
-- The prompt should be clear, instructional, and structured.
+        // 2. Select Persona
+        if (isStrictOfstedMode) {
+            systemInstruction = `
+                You are an expert HMI (Her Majesty's Inspector) for Further Education.
+                
+                The user is performing a high-stakes quality task: ${activityCategory}.
+                
+                RULES:
+                1. Use strict Education Inspection Framework (EIF) terminology.
+                2. Be critical and evaluative.
+                3. Audit evidence against Grade Descriptors.
+                4. **CRITICAL:** Return EXACTLY ONE result object in the array. Do not generate multiple options.
+                5. **DEPTH REQUIREMENT:** The generated prompt must instruct the next AI to CITE SPECIFIC EXAMPLES (quotes, data points) from the user's evidence to back up every claim. General summaries are not accepted.
+            `;
+        } else {
+            systemInstruction = `
+                You are a helpful Quality Assurance Manager.
+                
+                The user is performing a general quality task: ${activityCategory}.
+                
+                RULES:
+                1. Use professional, supportive educational language.
+                2. Focus on clarity and improvement.
+                3. **CRITICAL:** Return EXACTLY ONE result object in the array. Do not generate multiple options.
+            `;
+        }
 
-Output your response as a JSON object containing a list with ONE item.
-- "prompt_heading": A short title (e.g. "Prompt for ${activityDescription}").
-- "prompt": The actual text the teacher should copy.
-- "reason_for_choosing": A brief explanation of why this prompt structure works for this topic.
-`.trim();
+        // 3. User Context
+        const userPrompt = `
+            Generate a SINGLE prompt entry for:
+            - Provision: ${level}
+            - Area: ${subject}
+            - Theme: ${unit}
+            - Task: ${activityType}
+            - Headline: "${learningOutcome}"
+            
+            EVIDENCE CONTEXT:
+            "${topic}"
 
-    // 3. Build the User Context
-    const userPrompt = `The topic is: '${topic}'. Please generate the teacher-facing prompt now.`;
+            INSTRUCTIONS:
+            Generate a single JSON object containing two versions (Copilot and ChatGPT).
+            
+            IMPORTANT: Explicitly instruct the AI to cross-reference the user's evidence with its **Internal Knowledge Base** (uploaded EIF handbook/Strategy).
 
-    const OpenAI = new openai(API_CONFIG);
+            1. "copilot_prompt": Optimized for Microsoft 365 Copilot (Internal/Secure).
+               - Instruct it to "Look at the attached file" AND "Reference your uploaded knowledge base".
+               - Must demand specific citations from the file.
 
-    // 4. Call OpenAI
-    const completion = await OpenAI.chat.completions.create({
-        model: PRIMARY_MODEL,
-        messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
-        ],
-        temperature: 1.0,
-        response_format: zodResponseFormat(GeneratedPromptWithReasonList, "generated_prompt_list"),
-    });
+            2. "chatgpt_prompt": Optimized for ChatGPT (External/Paste).
+               - Instruct it to "Analyze the text pasted below" AND "Reference your uploaded knowledge base".
+               - Must demand specific citations from the text.
+            
+            CONSTRAINT: The output array must contain ONLY ONE item. Do not provide variations.
+        `;
 
-    const generated_list = completion.choices[0].message;
+        // 4. Call OpenAI
+        const completion = await openai.chat.completions.create({
+            model: PRIMARY_MODEL,
+            messages: [
+                { role: "system", content: systemInstruction },
+                { role: "user", content: userPrompt }
+            ],
+            response_format: zodResponseFormat(GeneratedPromptList, "generated_prompt_list"),
+            temperature: 0.2, // Low temp for strict adherence
+        });
 
-    if (generated_list.refusal) {
-        res.json({ error: generated_list.refusal });
-    } else {
-        const parsed = JSON.parse(generated_list.content);
-        res.json(parsed);
+        // 5. Send result
+        const result = JSON.parse(completion.choices[0].message.content);
+        res.json(result);
+
+    } catch (error) {
+        console.error("OpenAI Error:", error);
+        res.status(500).json({ 
+            error: "Failed to generate prompt. Check server logs." 
+        });
     }
-}));
-
-// -- Stubs for other endpoints to prevent crashes --
-
-router.post('/thinkDeeper', asyncHandler(async (req, res) => {
-     res.json({ prompt: req.body.prompt, what_makes_it_different: "Generated via bypass" });
-}));
-
-router.post('/generateVariations', asyncHandler(async (req, res) => {
-     res.json({ prompts: [] });
-}));
-
-router.post('/generatePreview', asyncHandler(async (req, res) => {
-    const prompt = req.body.prompt;
-    res.json({ text: "Preview mode is currently simplified. The AI would respond to: " + prompt.substring(0, 50) + "..." });
-}));
-
-router.post('/clarifyTopic', asyncHandler(async (req, res) => {
-    res.json({ 
-        prompt: req.body.prompt, 
-        specDetails: "<p>Specification data not available in this mode.</p>" 
-    });
-}));
-
-router.post('/reduceComplexity', asyncHandler(async (req, res) => {
-     res.json({ prompt: req.body.prompt });
-}));
+});
 
 module.exports = router;
