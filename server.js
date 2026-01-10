@@ -87,8 +87,6 @@ app.use(session({
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 
-const User = require('./models/user.js');
-
 const {
   authenticateUser,
   ensureAuthenticated,
@@ -99,8 +97,21 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 passport.use(new LocalStrategy({ usernameField: 'email' }, authenticateUser));
-passport.serializeUser(User.serialize);
-passport.deserializeUser(User.deserialize);
+
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+  const { PrismaClient } = require('@prisma/client');
+  const prisma = new PrismaClient();
+  try {
+    const user = await prisma.user.findUnique({ where: { id } });
+    done(null, user);
+  } catch (err) {
+    done(err, null);
+  }
+});
 
 // Logging -------------------------------------- //
 
@@ -142,6 +153,21 @@ app.get(/^\/[0-9a-fA-F]{6}$/, cors(), (req, res) => {
     res.status(404).send("Recipe not found.");
   }
 });
+// Route to show the Login Page
+app.get('/login', (req, res) => {
+  res.render('login', { 
+    siteTitle: 'Lamplighter Quality',
+    institutionLogo: '', // We can set a real logo path later
+    error: []            // Start with no error messages
+  });
+});
+
+// Handle the Login Logic
+app.post('/login', passport.authenticate('local', {
+  successRedirect: '/',      // If correct, go to the homepage
+  failureRedirect: '/login', // If wrong, go back to login
+  failureFlash: true         // Show "Incorrect password" message
+}));
 
 // Setup routes -------------------------------------- //
 
