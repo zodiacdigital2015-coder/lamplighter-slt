@@ -1,34 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login</title>
+    <title>Login | EDC Lamplighter</title>
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <div class="login-container">
-        <h1 class="siteTitle">
-            <%- siteTitle %>
-        </h1>
-        <h2>Please login</h2>
+    <div class="login-container" style="max-width: 500px; margin: 100px auto; padding: 40px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        
+        <div style="text-align: center; margin-bottom: 30px;">
+            <img src="/logo.png" alt="EDC Lamplighter Logo" style="height: 80px; width: auto; margin-bottom: 15px;">
+            
+            <h1 style="font-weight: 700; color: #2d3748; margin: 0; font-size: 1.8rem;">EDC Lamplighter</h1>
+            <p style="color: #718096; margin-top: 5px; font-size: 1rem;">Quality Assurance Portal</p>
+        </div>
+
         <% if (error && error.length > 0) { %>
-            <% error.forEach(function(msg) { %>
-                <p class="error-message"><%= msg %></p>
-            <% }); %>
-        <% } %>
-        <form id="loginForm" action="/login" method="POST">
-            <div class="form-group">
-                <input type="email" id="email" name="email" placeholder="Email" required>
+            <div style="background-color: #fff5f5; border: 1px solid #fed7d7; color: #c53030; padding: 10px; border-radius: 4px; margin-bottom: 20px; text-align: center;">
+                <% error.forEach(function(msg) { %>
+                    <p style="margin: 0;"><%= msg %></p>
+                <% }); %>
             </div>
-            <div class="form-group">
-                <input type="password" id="password" name="password" placeholder="Password" required>
+        <% } %>
+
+        <form id="loginForm" action="/login" method="POST">
+            <div class="form-group" style="margin-bottom: 15px;">
+                <input type="email" id="email" name="email" placeholder="Email Address" required 
+                       style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div class="form-group" style="margin-bottom: 25px;">
+                <input type="password" id="password" name="password" placeholder="Password" required 
+                       style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; box-sizing: border-box;">
             </div>
             <div class="button-group">
-                <button type="submit" class="btn btn-primary">Login</button>
+                <button type="submit" class="btn btn-primary" 
+                        style="width: 100%; padding: 12px; background-color: #3182ce; color: white; border: none; border-radius: 6px; font-weight: 600; font-size: 1.1rem; cursor: pointer;">
+                    Sign In
+                </button>
             </div>
         </form>
-        <div class="logo">
-            <img height="57px" style="height: 57px;" src="<%- institutionLogo %>">
+
+        <div style="margin-top: 25px; text-align: center; font-size: 0.85rem; color: #718096; border-top: 1px solid #e2e8f0; padding-top: 20px; line-height: 1.5;">
+            <p style="margin-bottom: 8px;">Please use the login credentials that you have been issued.</p>
+            <p style="margin: 0;">
+                To request access or for forgotten passwords please email:<br>
+                <a href="mailto:andrew.cummins@eastdurham.ac.uk" style="color: #3182ce; text-decoration: none; font-weight: 500;">andrew.cummins@eastdurham.ac.uk</a>
+            </p>
         </div>
+
     </div>
 
     <script src="/login.js"></script>
