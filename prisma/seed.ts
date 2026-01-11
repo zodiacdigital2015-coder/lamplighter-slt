@@ -3,27 +3,33 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
-  // Check if user exists
-  const existingUser = await prisma.user.findUnique({
-    where: {
-      email: 'admin@lamplighter.com',
+  // 1. Create/Verify Andrew
+  const andrew = await prisma.user.upsert({
+    where: { email: 'andrew.cummins@eastdurham.ac.uk' },
+    update: {},
+    create: {
+      email: 'andrew.cummins@eastdurham.ac.uk',
+      password: 'securePassword123', 
+      firstName: 'Andrew',
+      lastName: 'Cummins'
     },
   })
+  console.log('Processed User: Andrew')
 
-  if (existingUser) {
-    console.log('User already exists')
-    return
-  }
-
-  // Create user
-  const user = await prisma.user.create({
-    data: {
-      email: 'admin@lamplighter.com',
-      password: 'securePassword123',
+  // 2. Create/Verify Lee
+  const lee = await prisma.user.upsert({
+    where: { email: 'lee.kennedy@eastdurham.ac.uk' },
+    update: {},
+    create: {
+      email: 'lee.kennedy@eastdurham.ac.uk',
+      password: 'Summer!2026Tr@in', // Complex password
+      firstName: 'Lee',
+      lastName: 'Kennedy'
     },
   })
+  console.log('Processed User: Lee')
 
-  console.log('Created user with id:', user.id)
+  console.log('Seeding finished.')
 }
 
 main()
