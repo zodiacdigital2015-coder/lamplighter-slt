@@ -9,7 +9,7 @@ async function main() {
     update: {},
     create: {
       email: 'andrew.cummins@eastdurham.ac.uk',
-      password: 'securePassword123', 
+      password: 'Bedsty2013@', 
       firstName: 'Andrew',
       lastName: 'Cummins'
     },
