@@ -33,7 +33,21 @@ async function main() {
       lastName: 'Kennedy'
     },
   })
-  console.log('Processed User: Lee')
+  console.log('Processed User: AndrewG')
+    // 2. Create/Verify Lee
+  const andrewgPassword = await bcrypt.hash('Quality!2026Tr@in', 10)
+
+  const lee = await prisma.user.upsert({
+    where: { email: 'andy.grainger@eastdurham.ac.uk' },
+    update: {},
+    create: {
+      email: 'andy.grainger@eastdurham.ac.uk',
+      password: andrewgPassword,
+      firstName: 'Andy',
+      lastName: 'Grainger'
+    },
+  })
+  console.log('Processed User: AndrewG')
 
   console.log('Seeding finished.')
 }
