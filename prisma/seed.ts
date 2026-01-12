@@ -1,11 +1,10 @@
 import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcrypt' // Import the encryption tool
+import bcrypt from 'bcrypt'
 
 const prisma = new PrismaClient()
 
 async function main() {
   // 1. Create/Verify Andrew
-  // We hash the password so the database stores the secure version
   const andrewPassword = await bcrypt.hash('Bedsty2013@', 10)
   
   const andrew = await prisma.user.upsert({
@@ -33,11 +32,13 @@ async function main() {
       lastName: 'Kennedy'
     },
   })
-  console.log('Processed User: AndrewG')
-    // 2. Create/Verify Lee
+  console.log('Processed User: Lee')
+
+  // 3. Create/Verify Andy Grainger
   const andrewgPassword = await bcrypt.hash('Quality!2026Tr@in', 10)
 
-  const lee = await prisma.user.upsert({
+  // CHANGED: 'const lee' becomes 'const andy' below
+  const andy = await prisma.user.upsert({
     where: { email: 'andy.grainger@eastdurham.ac.uk' },
     update: {},
     create: {
@@ -47,7 +48,7 @@ async function main() {
       lastName: 'Grainger'
     },
   })
-  console.log('Processed User: AndrewG')
+  console.log('Processed User: Andy Grainger')
 
   console.log('Seeding finished.')
 }
