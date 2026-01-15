@@ -387,13 +387,11 @@
                     legacyContainer.classList.remove('hidden-section');
                     legacySelect.disabled = false; // Re-enable legacy
 
-                    // SAFETY NET: If the dropdown is empty (home.js failed), populate it manually
-                    if (legacySelect.options.length <= 1) {
-                        populateLegacyOptions(focus);
-                    }
+                    // Populate options based on focus area
+                    populateLegacyOptions(focus);
                     
-                    // Reset hints
-                    checkDataAnalysis(null);
+                    // Reset hints (initially)
+                    checkDataAnalysis(legacySelect.value);
                 }
             });
 
@@ -409,13 +407,19 @@
                 checkDataAnalysis(newValue);
             });
 
-            // --- 3. HELPER: DATA ANALYSIS HINTS ---
+            // --- 3. HANDLE LEGACY SELECTION ---
+            legacySelect.addEventListener('change', function() {
+                checkDataAnalysis(this.value);
+            });
+
+            // --- 4. HELPER: DATA ANALYSIS HINTS ---
             function checkDataAnalysis(val) {
                 const hint = document.getElementById('dataAnalysisHint');
                 const topicBox = document.getElementById('topic');
                 const label = document.getElementById('contextLabel');
 
-                if (val === 'Results Data Analysis') {
+                // Check if the task involves Data Analysis
+                if (val && (val.includes('Data Analysis') || val.includes('Rates') || val.includes('Retention'))) {
                     hint.classList.remove('hidden-section');
                     label.innerText = "Data Rules & Success Criteria:";
                     topicBox.placeholder = "Example: 'Attendance below 85% is RED/FAIL. Attendance 85-95% is AMBER. Please identify any departments with more than 3 RED students.'";
@@ -426,25 +430,24 @@
                 }
             }
 
-            // --- 4. SAFETY NET: POPULATE LEGACY DROPDOWN ---
-            // If home.js fails, this ensures the dropdown is never empty
+            // --- 5. POPULATE LEGACY DROPDOWN (With "Data Analysis" added to all) ---
             function populateLegacyOptions(focusArea) {
                 legacySelect.innerHTML = '<option value="" disabled selected>Select specific task...</option>';
                 
                 let options = [];
                 
                 if (focusArea === 'SAR') {
-                    options = ['Drafting SAR', 'Reviewing Judgements', 'Evidence Collection', 'Final Review'];
+                    options = ['Drafting SAR', 'Reviewing Judgements', 'Evidence Collection', 'Final Review', 'Data Analysis'];
                 } else if (focusArea === 'QIP') {
-                    options = ['Update Actions', 'Review Impact', 'Set New Targets'];
+                    options = ['Update Actions', 'Review Impact', 'Set New Targets', 'Data Analysis'];
                 } else if (focusArea === 'Inspection Prep') {
-                    options = ['Mock Deep Dive', 'Data Review', 'Staff Briefing', 'Logistics Planning'];
+                    options = ['Mock Deep Dive', 'Data Review', 'Staff Briefing', 'Logistics Planning', 'Data Analysis'];
                 } else if (focusArea === 'Deep Dive') {
-                    options = ['Curriculum Intent Review', 'Work Scrutiny', 'Student Voice', 'Lesson Visits'];
+                    options = ['Curriculum Intent Review', 'Work Scrutiny', 'Student Voice', 'Lesson Visits', 'Data Analysis'];
                 } else if (focusArea === 'Data Narrative') {
-                    options = ['Attendance Analysis', 'Achievement Rates', 'Retention Data', 'Value Added'];
+                    options = ['Attendance Analysis', 'Achievement Rates', 'Retention Data', 'Value Added', 'General Data Analysis'];
                 } else {
-                    options = ['General Review', 'Policy Check', 'Meeting Minutes'];
+                    options = ['General Review', 'Policy Check', 'Meeting Minutes', 'Data Analysis'];
                 }
 
                 options.forEach(opt => {
