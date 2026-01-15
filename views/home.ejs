@@ -6,6 +6,17 @@
     <title>Quality Assurance | Lamp Lighter</title>
     <link rel="stylesheet" href="/styles.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />    
+    <style>
+        .hidden-section {
+            display: none !important;
+        }
+        .warning-text {
+            color: #e53e3e; /* Red-600 */
+            font-size: 0.85rem;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+    </style>
 </head>
 
 <body class="home-page">
@@ -18,8 +29,8 @@
 
             <div class="header-right" style="display: flex; align-items: center; gap: 15px;">
                 <span style="font-weight: 600; color: #2d3748;">
-    <%= user.email %>
-</span>
+                    <%= user.email %>
+                </span>
 
                 <div class="action-buttons" style="display: flex; gap: 8px;">
                     <span class="btn btn-neutral btn-mini" id="show-help" title="Help">
@@ -70,7 +81,7 @@
                 <div class="welcome-section" style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #e2e8f0;">
                     <h2 style="font-size: 1.8rem; margin-bottom: 10px; color: #2d3748; font-weight: 600;">Quality Assurance & Enhancement</h2>
                     <p style="color: #718096; font-size: 1.1rem; max-width: 600px; margin: 0 auto; line-height: 1.5;">
-                        Generate structured prompts for Self-Assessment, Inspection Prep, and general Quality Assurance tasks.
+                        Generate structured prompts for Observation, Inspection Prep, and Data Analysis tasks.
                     </p>
                 </div>
 
@@ -81,12 +92,12 @@
                         <label for="level" class="ingredients-label">Provision Type:</label>
                         <select id="level" name="level" class="styled-input">
                             <option value="" disabled selected>Select Provision...</option>
-                            <option value="16-19 Study Programmes">16-19 Study Programmes</option>
-                            <option value="Adult Learning">Adult Learning</option>
+                            <option value="Education programmes for young people (EPYP)">Education programmes for young people (EPYP)</option>
+                            <option value="Adult learning programmes">Adult learning programmes</option>
                             <option value="Apprenticeships">Apprenticeships</option>
-                            <option value="High Needs/SEND">High Needs / SEND</option>
-                            <option value="T Levels">T Levels</option>
-                            <option value="Cross-College">Cross-College / All Provision</option>
+                            <option value="High Needs">High Needs</option>
+                            <option value="TLevel">TLevel</option>
+                            <option value="Cross College/All provision">Cross College/All provision</option>
                         </select>  
                     </div>  
 
@@ -110,26 +121,40 @@
                         <label for="activityCategory" class="ingredients-label">Focus Area:</label>
                         <select id="activityCategory" name="activityCategory" class="styled-input">
                             <option value="" disabled selected>Select Context...</option>
+                            <option value="Observation">Observation / Quality Cycle</option>
                             <option value="General Quality Assurance">General Quality Assurance</option>
                             <option value="SAR">Self Assessment Report (SAR)</option>
                             <option value="QIP">Quality Improvement Plan (QIP)</option>
                             <option value="Inspection Prep">Inspection Prep</option>
-                            <option value="Deep Dive">Deep Dive</option>
+                            <option value="Deep Dive">Deep Dive (Non-Observation)</option>
                             <option value="Data Narrative">Data Narrative</option>
                         </select>  
                     </div>  
 
-                    <div class="col-5 dropdown-item">
+                    <div class="col-5 dropdown-item" id="legacy-task-container">
                         <label for="activityType" class="ingredients-label">Specific Quality Task:</label>
                         <select id="activityType" name="activityType" class="styled-input" disabled>
                             <option value="">Select Focus Area first...</option>
+                        </select>  
+                    </div>
+
+                    <div class="col-5 dropdown-item hidden-section" id="observation-task-container">
+                        <label for="customObsSelect" class="ingredients-label">Observation Activity:</label>
+                        <select id="customObsSelect" class="styled-input">
+                            <option value="" disabled selected>Select Activity...</option>
+                            <option value="Learning Walk">Learning Walk</option>
+                            <option value="Deep Dive">Deep Dive</option>
+                            <option value="Triad">Triad</option>
+                            <option value="Graded Observation">Graded Observation</option>
+                            <option value="Peer Review">Peer Review</option>
+                            <option value="Results Data Analysis">Results Data Analysis</option>
                         </select>  
                     </div>  
 
                     <div class="col-1"></div>
                 </div>
 
- <div class="row">
+                <div class="row">
                     <div class="col-1"></div>
 
                     <div class="col-5 dropdown-item">
@@ -140,7 +165,7 @@
                             type="text"
                             class="styled-input"
                             autocomplete="off"
-                            placeholder="e.g. Assessment & Feedback, Behaviour, or Ofsted: Quality of Education"
+                            placeholder="e.g. Assessment, Behaviour, or Ofsted: Quality of Education"
                             list="judgment-options"
                         />
                         <datalist id="judgment-options">
@@ -162,7 +187,7 @@
                             type="text"
                             class="styled-input"
                             autocomplete="off"
-                            placeholder="e.g. 'Attendance has improved by 5%' or 'Feedback is not detailed enough'"
+                            placeholder="e.g. 'Attendance improved by 5%' or 'Feedback lacks depth'"
                         />
                     </div>
 
@@ -177,7 +202,13 @@
                 <div class="row">
                     <div class="col-1"></div>
                     <div class="col-10 dropdown-item">
-                        <label for="topic" class="ingredients-label">Context / Description of Evidence:</label>
+                        <label for="topic" class="ingredients-label" id="contextLabel">Context / Description of Evidence:</label>
+                        
+                        <div id="dataAnalysisHint" class="hidden-section warning-text" style="margin-bottom: 8px;">
+                            <span class="material-symbols-outlined" style="font-size: 16px; vertical-align: text-bottom;">warning</span>
+                            IMPORTANT: The AI cannot see colours. Please define your rules below (e.g. "Red means below 85%").
+                        </div>
+
                         <div class="topic-container">
                             <textarea
                                 id="topic"
@@ -185,7 +216,7 @@
                                 class="styled-input"
                                 autocomplete="off"
                                 style="height: 120px;"
-                                placeholder="Briefly describe what you are analyzing. Example: 'I will be uploading the draft Construction SAR' or 'I have a spreadsheet of Level 3 attendance data'. (You will upload the actual files in the next step)."></textarea>    
+                                placeholder="Briefly describe what you are analyzing. Example: 'I will be uploading the draft Construction SAR' or 'I have a spreadsheet of Level 3 attendance data'."></textarea>    
                         </div>            
                     </div>
                     <div class="col-1"></div>
@@ -331,6 +362,101 @@
     <script src="/homeRecipes.js"></script>
     <script src="/homeGenerators.js"></script>
     <script src="/home.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            const categorySelect = document.getElementById('activityCategory');
+            const legacyContainer = document.getElementById('legacy-task-container');
+            const obsContainer = document.getElementById('observation-task-container');
+            const legacySelect = document.getElementById('activityType');
+            const customObsSelect = document.getElementById('customObsSelect');
+
+            // --- 1. HANDLE FOCUS AREA CHANGE ---
+            categorySelect.addEventListener('change', function() {
+                const focus = this.value;
+
+                if (focus === 'Observation') {
+                    // SWITCH TO OBSERVATION MODE
+                    legacyContainer.classList.add('hidden-section');
+                    obsContainer.classList.remove('hidden-section');
+                    legacySelect.disabled = true; // Disable legacy so form doesn't use it
+                } else {
+                    // SWITCH TO LEGACY MODE
+                    obsContainer.classList.add('hidden-section');
+                    legacyContainer.classList.remove('hidden-section');
+                    legacySelect.disabled = false; // Re-enable legacy
+
+                    // SAFETY NET: If the dropdown is empty (home.js failed), populate it manually
+                    if (legacySelect.options.length <= 1) {
+                        populateLegacyOptions(focus);
+                    }
+                    
+                    // Reset hints
+                    checkDataAnalysis(null);
+                }
+            });
+
+            // --- 2. HANDLE OBSERVATION SELECTION ---
+            customObsSelect.addEventListener('change', function() {
+                const newValue = this.value;
+                
+                // SYNC: We "fake" the legacy dropdown so existing form logic works
+                legacySelect.disabled = false;
+                legacySelect.innerHTML = `<option value="${newValue}" selected>${newValue}</option>`;
+                
+                // Trigger hints
+                checkDataAnalysis(newValue);
+            });
+
+            // --- 3. HELPER: DATA ANALYSIS HINTS ---
+            function checkDataAnalysis(val) {
+                const hint = document.getElementById('dataAnalysisHint');
+                const topicBox = document.getElementById('topic');
+                const label = document.getElementById('contextLabel');
+
+                if (val === 'Results Data Analysis') {
+                    hint.classList.remove('hidden-section');
+                    label.innerText = "Data Rules & Success Criteria:";
+                    topicBox.placeholder = "Example: 'Attendance below 85% is RED/FAIL. Attendance 85-95% is AMBER. Please identify any departments with more than 3 RED students.'";
+                } else {
+                    hint.classList.add('hidden-section');
+                    label.innerText = "Context / Description of Evidence:";
+                    topicBox.placeholder = "Briefly describe what you are analyzing. Example: 'I will be uploading the draft Construction SAR' or 'I have a spreadsheet of Level 3 attendance data'.";
+                }
+            }
+
+            // --- 4. SAFETY NET: POPULATE LEGACY DROPDOWN ---
+            // If home.js fails, this ensures the dropdown is never empty
+            function populateLegacyOptions(focusArea) {
+                legacySelect.innerHTML = '<option value="" disabled selected>Select specific task...</option>';
+                
+                let options = [];
+                
+                if (focusArea === 'SAR') {
+                    options = ['Drafting SAR', 'Reviewing Judgements', 'Evidence Collection', 'Final Review'];
+                } else if (focusArea === 'QIP') {
+                    options = ['Update Actions', 'Review Impact', 'Set New Targets'];
+                } else if (focusArea === 'Inspection Prep') {
+                    options = ['Mock Deep Dive', 'Data Review', 'Staff Briefing', 'Logistics Planning'];
+                } else if (focusArea === 'Deep Dive') {
+                    options = ['Curriculum Intent Review', 'Work Scrutiny', 'Student Voice', 'Lesson Visits'];
+                } else if (focusArea === 'Data Narrative') {
+                    options = ['Attendance Analysis', 'Achievement Rates', 'Retention Data', 'Value Added'];
+                } else {
+                    options = ['General Review', 'Policy Check', 'Meeting Minutes'];
+                }
+
+                options.forEach(opt => {
+                    const el = document.createElement('option');
+                    el.value = opt;
+                    el.textContent = opt;
+                    legacySelect.appendChild(el);
+                });
+            }
+
+        });
+    </script>
 
 </body>
 </html>
