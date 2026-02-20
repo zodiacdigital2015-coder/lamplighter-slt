@@ -2,6 +2,16 @@
  * Front-end helpers for displaying and managing comments.
  */
 
+// Escape HTML special characters to prevent XSS when inserting user content into the DOM
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 //Convert an ISO date string to a short "1st January" format
 function shortDate(dateString) {
     const months = [
@@ -72,8 +82,8 @@ async function getComments(recipeId, colWrap = true) {
             }
             commentsHTML += `
                 <li id="comment-li-${comment.CommentId}">
-                    <span class="comment-text">${comment.Comment}</span>
-                    <span class="comment-author">${author}</span>
+                    <span class="comment-text">${escapeHtml(comment.Comment)}</span>
+                    <span class="comment-author">${escapeHtml(author)}</span>
                     <span class="comment-date">${shortDate(comment.SavedDate)}</span>  
                     <span class="comment-actions">${actions}</span>
                 </li>`;

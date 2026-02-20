@@ -65,12 +65,15 @@ function scoreChunk(chunkText, keywords) {
  */
 function getSpecChunks(subjectId, searchString, noOfResults) {
     // 1. Locate specification directory
-    const specsDir = path.join(__dirname, "../../data/specs");
+    const specsDir = path.resolve(__dirname, "../../data/specs");
     if (!fs.existsSync(specsDir)) {
         fs.mkdirSync(specsDir, { recursive: true });
     }
-    
-    const textFileName = path.join(specsDir, subjectId + ".txt");
+
+    const textFileName = path.resolve(specsDir, subjectId + ".txt");
+    if (!textFileName.startsWith(specsDir + path.sep)) {
+        throw new Error('Invalid subject ID');
+    }
 
     // 2. Load specification text
     let text = fs.readFileSync(textFileName, { encoding: 'utf8' });

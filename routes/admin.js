@@ -376,10 +376,13 @@ router.post('/subjects/:subjectId/spec', upload.single('specFile'), async (req, 
         if (!req.file) {
             return res.status(400).json({ success: false, message: 'No file uploaded' });
         }
-        const specsDir = path.join(__dirname, '..', '..', 'data', 'specs');
+        const specsDir = path.resolve(__dirname, '..', '..', 'data', 'specs');
         fs.mkdirSync(specsDir, { recursive: true });
-        const pdfPath = path.join(specsDir, `${subjectId}.pdf`);
-        const txtPath = path.join(specsDir, `${subjectId}.txt`);
+        const pdfPath = path.resolve(specsDir, `${subjectId}.pdf`);
+        const txtPath = path.resolve(specsDir, `${subjectId}.txt`);
+        if (!pdfPath.startsWith(specsDir + path.sep) || !txtPath.startsWith(specsDir + path.sep)) {
+            return res.status(400).json({ success: false, message: 'Invalid subject ID' });
+        }
         fs.writeFileSync(pdfPath, req.file.buffer);
                 
         const options = {
@@ -427,8 +430,11 @@ router.delete('/subjects/:subjectId/delete', async (req, res) => {
 router.get('/spec/:subjectId', (req, res) => {
     try {
         const subjectId = req.params.subjectId;
-        const specsDir = path.join(__dirname, '..', '..', 'data', 'specs');
-        const txtPath = path.join(specsDir, `${subjectId}.txt`);
+        const specsDir = path.resolve(__dirname, '..', '..', 'data', 'specs');
+        const txtPath = path.resolve(specsDir, `${subjectId}.txt`);
+        if (!txtPath.startsWith(specsDir + path.sep)) {
+            return res.status(400).send('Invalid subject ID');
+        }
         if (!fs.existsSync(txtPath)) {
             return res.status(404).send('Specification not found');
         }
