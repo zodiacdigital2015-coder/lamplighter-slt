@@ -318,56 +318,34 @@ async function generateMorePrompts() {
  */
 async function generatePrompts() {
 
-    // 1. Read values from the page
-    // ADDED: We need to read the level too!
-    const level = document.getElementById('level').value; 
-    const subject = document.getElementById('subject').value;
-    const topic = document.getElementById('topic').value;
-    const unit = document.getElementById('unit').value;
-    const learningOutcome = document.getElementById('learningOutcome').value;
-    const activityType = document.getElementById('activityType').value;
+    // 1. Read values from the SLT form
+    const questionType = document.getElementById('questionType')?.value || '';
+    const stakeholderLens = document.getElementById('stakeholderLens')?.value || 'General';
+    const timeScope = document.getElementById('timeScope')?.value || 'all-records';
+    const docPriority = document.getElementById('docPriority')?.value || 'Balanced';
+    const topic = document.getElementById('topic')?.value || '';
+    const outputStyle = document.getElementById('outputStyle')?.value || 'executive-summary';
+    const persona = document.getElementById('persona')?.value || 'neutral';
+    const hasExternalDoc = document.getElementById('hasExternalDoc')?.checked || false;
+    const strictRedaction = document.getElementById('strictRedaction')?.checked || false;
 
-    // Templates dropdown is optional – default to "auto" if it is missing
-    let templates = "auto";
-    const templatesElement = document.getElementById('templates');
-    if (templatesElement) {
-        templates = templatesElement.value;
-    }
+    // NEW: Audience and time pressure fields
+    const audience = document.getElementById('audience')?.value || 'Internal SLT use only';
+    const timePressure = document.getElementById('timePressure')?.value || 'Routine / No immediate deadline';
 
-    // TEMP: hard-code a subject id so the rest of the system has something to work with
-    const subjectId = 1;
-
-    // Build template lists as the original code did
-    let templateList = "";
-    const categoryCheckboxes = document.getElementsByClassName('category-checkbox');
-    for (let checkbox of categoryCheckboxes) {
-        if (checkbox.checked) templateList += checkbox.value;
-    }
-
-    let individualList = "";
-    if (templates === "individual") {
-        const individualCheckboxes = document.getElementsByClassName('individual-checkbox');
-        for (let checkbox of individualCheckboxes) {
-            if (checkbox.checked) {
-                if (individualList.length > 0) individualList += ";";
-                individualList += checkbox.value;
-            }
-        }
-    }
-
-    // Minimal validation so we definitely hit the API
-    if (topic === "") {
-        alert("Type something in the Topic box first.");
+    // Validation — topic is the minimum required field
+    if (!topic || topic.trim() === '') {
+        alert('Please enter a topic or line of enquiry before generating.');
         return;
     }
 
-    // Show loaders, hide choices – same as original behaviour
+    // Show loader, hide form
     stage = 1;
     updateHelp();
 
     document.getElementById('help-container').style.display = 'none';
-    document.getElementById('choice-container').classList.add("hidden");
-    document.getElementById('main-loader').classList.remove("hidden");
+    document.getElementById('choice-container').classList.add('hidden');
+    document.getElementById('main-loader').classList.remove('hidden');
 
     let response = null;
 
@@ -378,16 +356,17 @@ async function generatePrompts() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                subjectId,
-                level,         // <--- ADDED THIS (Sends "GCSE", "A Level" etc)
-                subject,       // <--- ADDED THIS (Sends "Computer Science", etc)
+                questionType,
+                stakeholderLens,
+                timeScope,
+                docPriority,
                 topic,
-                existing: [],
-                templates: templateList,
-                individuals: individualList,
-                unit,
-                learningOutcome,
-                activityType
+                outputStyle,
+                persona,
+                hasExternalDoc,
+                strictRedaction,
+                audience,
+                timePressure,
             })
         });
     } catch (err) {
@@ -395,8 +374,8 @@ async function generatePrompts() {
     }
 
     if (response == null) {
-        document.getElementById('main-loader').classList.add("hidden");
-        document.getElementById('choice-container').classList.remove("hidden");
+        document.getElementById('main-loader').classList.add('hidden');
+        document.getElementById('choice-container').classList.remove('hidden');
         stage = 0;
         updateHelp();
         return;
@@ -405,9 +384,9 @@ async function generatePrompts() {
     const data = await response.json();
 
     if (data.error !== undefined) {
-        showToast(data.error)
-        document.getElementById("main-loader").classList.add("hidden");
-        document.getElementById("choice-container").classList.remove("hidden");
+        showToast(data.error);
+        document.getElementById('main-loader').classList.add('hidden');
+        document.getElementById('choice-container').classList.remove('hidden');
         stage = 0;
         updateHelp();
     } else {
@@ -416,6 +395,7 @@ async function generatePrompts() {
 
     checkOverflow();
     handleScroll();
+}
 
     // These listeners only need to be attached once really, but leaving them here as per original code
     // wrapped in guards to prevent errors if elements don't exist

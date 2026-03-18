@@ -9,15 +9,15 @@
     <style>
         /* SLT Specific Styling - Midnight Blue & Gold Theme */
         :root {
-            --primary-color: #0f172a; /* Slate 900 - Deep Executive Blue */
-            --accent-color: #b45309;  /* Amber 700 - Deep Gold */
+            --primary-color: #0f172a;
+            --accent-color: #b45309;
         }
         
         body { background-color: #f8fafc; }
         .siteTitle { color: #0f172a !important; }
         
         .slt-badge {
-            background-color: #b45309 !important; /* GOLD Badge */
+            background-color: #b45309 !important;
             color: #fff;
             padding: 4px 10px;
             border-radius: 4px;
@@ -37,7 +37,7 @@
             transition: all 0.2s;
         }
         .btn-primary:hover {
-            background-color: #b45309 !important; /* Gold on Hover */
+            background-color: #b45309 !important;
             border-color: #b45309 !important;
         }
 
@@ -49,7 +49,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* External Context Toggle Box (Yellow) */
         .external-context-box {
             background-color: #fffbeb; 
             border: 1px solid #fcd34d;
@@ -59,7 +58,7 @@
             display: flex;
             align-items: flex-start;
             gap: 12px;
-            height: 100%; /* Ensures equal height if used in grid */
+            height: 100%;
         }
         
         .external-context-box input[type="checkbox"] {
@@ -87,10 +86,9 @@
             color: #78350f;
         }
 
-        /* Redaction Toggle Box (Secure Blue) */
         .redaction-box {
-            background-color: #f1f5f9; /* Slate 100 - Very Light Blue/Grey */
-            border: 1px solid #0f172a; /* Slate 900 - Matching the theme */
+            background-color: #f1f5f9;
+            border: 1px solid #0f172a;
             border-radius: 6px;
             padding: 12px 15px;
             margin-bottom: 20px;
@@ -104,7 +102,7 @@
             width: 18px;
             height: 18px;
             cursor: pointer;
-            accent-color: #0f172a; /* Dark Blue Checkbox */
+            accent-color: #0f172a;
             margin-top: 3px; 
             flex-shrink: 0; 
         }
@@ -170,7 +168,8 @@
                             <option value="Financial">Financial Sustainability & Efficiency</option>
                             <option value="Quality">Quality of Education (Ofsted)</option>
                             <option value="Reputational">Reputation & Stakeholder Trust</option>
-                            <option value="Staffing">HR & Organisational Culture</option> <option value="Student">Student Experience & Outcomes</option>
+                            <option value="Staffing">HR & Organisational Culture</option>
+                            <option value="Student">Student Experience & Outcomes</option>
                         </select>  
                     </div>  
                     <div class="col-1"></div>
@@ -212,7 +211,6 @@
 
                 <div class="row">
                     <div class="col-1"></div>
-                    
                     <div class="col-5 dropdown-item">
                         <label for="outputStyle" class="ingredients-label">Desired Output Format:</label>
                         <select id="outputStyle" name="outputStyle" class="styled-input">
@@ -223,8 +221,7 @@
                             <option value="gap-analysis">Gap Analysis (Promise vs Reality)</option>
                         </select>  
                     </div>
-
-<div class="col-5 dropdown-item">
+                    <div class="col-5 dropdown-item">
                         <label for="persona" class="ingredients-label" style="color:#0f172a !important;">Voice / Tone:</label>
                         <select id="persona" name="persona" class="styled-input">
                             <option value="neutral" selected>Objective / Neutral Analyst</option>
@@ -233,7 +230,30 @@
                             <option value="jackie">Jackie Lanagan</option>
                         </select>  
                     </div>
+                    <div class="col-1"></div>
+                </div>
 
+                <!-- NEW: Audience and Time Pressure row -->
+                <div class="row">
+                    <div class="col-1"></div>
+                    <div class="col-5 dropdown-item">
+                        <label for="audience" class="ingredients-label">Intended Audience:</label>
+                        <select id="audience" name="audience" class="styled-input">
+                            <option value="Internal SLT use only" selected>Internal SLT use only</option>
+                            <option value="Board paper / Governor briefing">Board paper / Governor briefing</option>
+                            <option value="Ofsted preparation">Ofsted preparation</option>
+                            <option value="External stakeholder / Partner">External stakeholder / Partner</option>
+                        </select>
+                    </div>
+                    <div class="col-5 dropdown-item">
+                        <label for="timePressure" class="ingredients-label">Time Pressure:</label>
+                        <select id="timePressure" name="timePressure" class="styled-input">
+                            <option value="Routine / No immediate deadline" selected>Routine / No immediate deadline</option>
+                            <option value="Within the next month">Within the next month</option>
+                            <option value="Within the next two weeks">Within the next two weeks</option>
+                            <option value="Ofsted visit imminent (within 48 hours)">Ofsted visit imminent (within 48 hours)</option>
+                        </select>
+                    </div>
                     <div class="col-1"></div>
                 </div>
 
@@ -294,6 +314,9 @@
                                 INSTITUTIONAL MEMORY AGENT
                             </div>
                             <div class="response-text" id="copilot-text-<%= i %>" style="font-size: 1rem; color: #334155; white-space: pre-wrap; line-height: 1.6;"></div>
+                            <div id="char-warning-<%= i %>" style="display:none; margin-top:12px; padding: 10px 14px; background:#fef3c7; border:1px solid #f59e0b; border-radius:6px; font-size:0.85rem; color:#92400e;">
+                                ⚠️ This prompt is <span id="char-count-<%= i %>"></span> characters — over the 1,900 character Copilot limit. Please simplify your inputs and regenerate.
+                            </div>
                             <button id="copy-copilot-<%= i %>" class="btn btn-primary btn-mini" style="width:100%; margin-top:20px;">
                                 Copy Prompt
                             </button>

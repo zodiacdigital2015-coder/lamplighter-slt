@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
         generateBtn.disabled = true;
         loader.classList.remove('hidden');
         
-        // 3. Gather Data (NOW INCLUDES REDACTION)
+        // 3. Gather Data — includes all form fields including new audience and timePressure
         const payload = {
             questionType: document.getElementById('questionType').value,
             stakeholderLens: document.getElementById('stakeholderLens').value,
@@ -27,15 +27,17 @@ document.addEventListener('DOMContentLoaded', function() {
             topic: document.getElementById('topic').value,
             outputStyle: document.getElementById('outputStyle').value,
             persona: document.getElementById('persona').value,
-            
-            // Toggles
             hasExternalDoc: document.getElementById('hasExternalDoc').checked,
-            strictRedaction: document.getElementById('strictRedaction').checked
+            strictRedaction: document.getElementById('strictRedaction').checked,
+
+            // NEW: Audience and time pressure
+            audience: document.getElementById('audience').value,
+            timePressure: document.getElementById('timePressure').value,
         };
 
         try {
-            // 4. Send to Server
-            const response = await fetch('/generate', {
+            // 4. Send to API endpoint
+            const response = await fetch('/api/generatePrompts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -45,8 +47,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (data.error) {
                 alert("Error: " + data.error);
+            } else if (data.prompts && data.prompts.length > 0) {
+                showResult(data.prompts[0]);
             } else {
-                showResult(data.result);
+                alert("No prompt was returned. Please try again.");
             }
 
         } catch (err) {
@@ -58,18 +62,32 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Helper Function to Display Output
-    function showResult(text) {
+    // 5. Display the generated prompt and handle character limit warning
+    function showResult(promptData) {
         const container = document.getElementById('response-container-1');
         const textBox = document.getElementById('copilot-text-1');
         const copyBtn = document.getElementById('copy-copilot-1');
+        const charWarning = document.getElementById('char-warning-1');
+        const charCount = document.getElementById('char-count-1');
 
-        textBox.textContent = text;
+        // Populate the prompt text
+        textBox.textContent = promptData.copilot_prompt;
+
+        // Show or hide the character limit warning
+        if (promptData.over_limit === true) {
+            charCount.textContent = promptData.character_count;
+            charWarning.style.display = 'block';
+        } else {
+            charWarning.style.display = 'none';
+        }
+
+        // Show the container and scroll to it
         container.classList.remove('hidden');
         container.scrollIntoView({ behavior: 'smooth' });
 
+        // Copy button behaviour
         copyBtn.onclick = function() {
-            navigator.clipboard.writeText(text);
+            navigator.clipboard.writeText(promptData.copilot_prompt);
             const originalText = copyBtn.textContent;
             copyBtn.textContent = "Copied!";
             setTimeout(() => {
