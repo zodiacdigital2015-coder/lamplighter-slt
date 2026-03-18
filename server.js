@@ -29,6 +29,10 @@ app.get('/', (req, res) => {
     res.render('home', { user: req.user });
 });
 
+// API Routes
+const apiRoutes = require('./routes/api.js');
+app.use('/api', apiRoutes);
+
 // POST /generate
 app.post('/generate', (req, res) => {
     try {
