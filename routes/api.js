@@ -3,6 +3,7 @@
  * - Audience-aware output formatting
  * - Time pressure calibration
  * - Document transparency instructions
+ * - Full persona voice instructions (Scott, Carina, Jackie, Neutral)
  * - 1900 character prompt limit with user warning
  * - Single Copilot output only
  * - Temperature 0.2 for consistency
@@ -39,7 +40,6 @@ const openai = new OpenAI({
 const PRIMARY_MODEL = "gpt-4o";
 
 // -- Zod Schema --
-// Single Copilot prompt only, with a character_count field for validation
 const GeneratedPromptWithReason = zod.object({
     prompt_heading: zod.string(),
     copilot_prompt: zod.string(),
@@ -51,10 +51,54 @@ const GeneratedPromptList = zod.object({
     prompts: zod.array(GeneratedPromptWithReason),
 });
 
+// -- Persona Map --
+// Full writing voice instructions for each persona.
+// These are grounded in real writing samples from each individual.
+// The neutral analyst is the fallback for general use.
+const personaMap = {
+    "neutral": `
+        Write this output in the voice of an Objective, Neutral Analyst.
+        Focus purely on the facts. Avoid emotive language.
+        Use clear, professional prose appropriate for senior leaders.`,
+
+    "scott": `
+        Write this output in the voice of Scott Bullock, the Principal of East Durham College.
+        Use a visionary, collaborative, and motivating tone.
+        Frame the college as an 'anchor institution' dedicated to 'enriching lives through 
+        transformative education' and building a regional 'talent pipeline'.
+        Focus on balancing three equal dimensions: People, Performance, and Finance.
+        Use inclusive, shared-mission language ('we', 'our') and structure arguments clearly
+        (e.g., using 'An Ask and an Offer' or numbered priorities).
+        Be realistic about sector challenges (funding, inspections) but remain fiercely proud
+        of the staff and the East Durham community.
+        Always tie operational details back to improving students' life chances and social mobility.`,
+
+    "carina": `
+        Write this output in the voice of Carina Briggs.
+        Use a formal, evaluative, and highly data-driven tone typical of UK FE performance reporting.
+        Favour structured, evidence-based sentences that frequently reference leaders, managers,
+        and governors.
+        Use sector-specific terminology (e.g., NARTs, ILR, KPIs, distance travelled).
+        Be transparent: celebrate successes using concrete statistics, but directly state areas
+        requiring improvement without sugar-coating (e.g., 'outcomes are disappointing').
+        Frame risks and issues using an 'Alert, Advise, Assure' mindset, maintaining a clear
+        focus on strategic impact, accountability, and positive learner destinations.`,
+
+    "jackie": `
+        Write this output in the voice of Jackie Lanagan.
+        Use a formal, strategic, and partnership-focused tone.
+        Frame the college as a civic actor driving social mobility and responding to regional
+        skills needs.
+        Favour active, future-oriented sentences (e.g., 'We will actively seek...', 
+        'We will continue to invest...').
+        Connect actions directly to strategic objectives, KPIs, or compliance standards.
+        Use terminology such as 'skills priority areas', 'labour market intelligence (LMI)',
+        'stakeholder engagement', and 'levy paying organisations'.
+        When discussing issues (like complaints), focus on demographic patterns, procedural
+        fairness, and continuous improvement rather than isolated incidents.`,
+};
+
 // -- Audience Context --
-// Returns formatting and tone instructions based on intended audience
-// This ensures the generated prompt instructs Copilot to produce
-// output in the right format for where it will actually be used
 function getAudienceContext(audience) {
     const contexts = {
         "Internal SLT use only": `
@@ -96,12 +140,11 @@ function getAudienceContext(audience) {
 }
 
 // -- Time Pressure Context --
-// Adjusts the urgency and focus of the generated prompt
 function getTimePressureContext(timePressure) {
     const contexts = {
         "Routine / No immediate deadline": `
             TIME CONTEXT: Routine enquiry with no immediate deadline.
-            Take a thorough, reflective approach. 
+            Take a thorough, reflective approach.
             Depth and completeness are more important than brevity.`,
 
         "Within the next month": `
@@ -141,8 +184,8 @@ router.post('/generatePrompts', async (req, res) => {
             persona,
             hasExternalDoc,
             strictRedaction,
-            audience,        // NEW
-            timePressure,    // NEW
+            audience,
+            timePressure,
         } = req.body;
 
         // -- DEFAULTS --
@@ -159,23 +202,16 @@ router.post('/generatePrompts', async (req, res) => {
             topic = "The user will provide the specific line of enquiry verbally in Copilot.";
         }
 
+        // -- RESOLVE PERSONA --
+        const personaInstruction = personaMap[persona] || personaMap["neutral"];
+
         // -- AUDIENCE & TIME PRESSURE CONTEXT --
         const audienceContext = getAudienceContext(audience);
         const timePressureContext = getTimePressureContext(timePressure);
 
-        // -- PERSONA INSTRUCTION --
-        // Maps the dropdown value to the full persona name for the prompt
-        const personaMap = {
-            "neutral": "Objective / Neutral Analyst",
-            "scott": "Scott Bullock (Principal)",
-            "carina": "Carina Briggs",
-            "jackie": "Jackie Lanagan",
-        };
-        const personaLabel = personaMap[persona] || "Objective / Neutral Analyst";
-
         // -- SECURITY FLAGS --
         const redactionFlag = (strictRedaction === 'true' || strictRedaction === true)
-            ? "CONFIDENTIALITY LOCK ACTIVE"
+            ? "CONFIDENTIALITY LOCK ACTIVE: Strip all names, student IDs, and salary figures from the output. Generalise all roles (e.g. replace named individuals with 'A senior manager')."
             : "";
 
         const draftFilterFlag = (docPriority === 'Approved')
@@ -220,7 +256,9 @@ router.post('/generatePrompts', async (req, res) => {
             - Document Priority: ${docPriority}
             - Topic / Line of Enquiry: "${topic}"
             - Desired Output Format: ${outputStyle}
-            - Voice / Persona: ${personaLabel}
+
+            VOICE / PERSONA INSTRUCTION:
+            ${personaInstruction}
 
             AUDIENCE & URGENCY:
             ${audienceContext}
@@ -235,16 +273,16 @@ router.post('/generatePrompts', async (req, res) => {
 
             DOCUMENT TRANSPARENCY INSTRUCTION (always include this):
             The prompt must instruct Copilot to:
-            1. Begin every response by listing the documents it is drawing from, 
+            1. Begin every response by listing the documents it is drawing from,
                e.g. "Sources used: [Strategic Plan 2023-26, Board Minutes Oct 2024, QIP Nov 2024]"
-            2. If a document relevant to this enquiry appears to be missing from the 
-               knowledge base, explicitly tell the user which document type is needed 
+            2. If a document relevant to this enquiry appears to be missing from the
+               knowledge base, explicitly tell the user which document type is needed
                and where it would typically be found.
 
             ANALYTICAL MODE:
             Based on the strategic lens "${questionType}", apply the most appropriate mode:
             - strategic-alignment or commitment-tracking: Use MODE A (Gap Analysis)
-            - risk-patterns: Use MODE B (Risk Pattern Recognition)  
+            - risk-patterns: Use MODE B (Risk Pattern Recognition)
             - historical-context or evidence-impact: Use MODE A or MODE B as appropriate
 
             FORMAT REMINDER: The final copilot_prompt must be under 1900 characters.
@@ -266,12 +304,10 @@ router.post('/generatePrompts', async (req, res) => {
         const result = JSON.parse(completion.choices[0].message.content);
 
         // -- SERVER-SIDE CHARACTER COUNT CHECK --
-        // GPT-4o counts characters itself, but we verify server-side as a safety net
         if (result.prompts && result.prompts.length > 0) {
             const prompt = result.prompts[0];
             const actualCount = prompt.copilot_prompt.length;
-            
-            // If over limit, flag it — don't silently truncate
+
             if (actualCount > 1900) {
                 prompt.character_count = actualCount;
                 prompt.over_limit = true;
