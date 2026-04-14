@@ -53,8 +53,7 @@ const GeneratedPromptList = zod.object({
 
 // -- Persona Map --
 // Full writing voice instructions for each persona.
-// These are grounded in real writing samples from each individual.
-// The neutral analyst is the fallback for general use.
+// Grounded in real writing samples from each individual.
 const personaMap = {
     "neutral": `
         Write this output in the voice of an Objective, Neutral Analyst.
@@ -283,7 +282,9 @@ router.post('/generatePrompts', async (req, res) => {
             Based on the strategic lens "${questionType}", apply the most appropriate mode:
             - strategic-alignment or commitment-tracking: Use MODE A (Gap Analysis)
             - risk-patterns: Use MODE B (Risk Pattern Recognition)
-            - historical-context or evidence-impact: Use MODE A or MODE B as appropriate
+            - historical-context or performance-targets: Use MODE A or MODE B as appropriate
+            - talking-points: Produce a concise briefing card of no more than 6 bullet points,
+              each no longer than two lines. Suitable for walking into a meeting prepared.
 
             FORMAT REMINDER: The final copilot_prompt must be under 1900 characters.
             Count carefully and return the character count in the character_count field.
