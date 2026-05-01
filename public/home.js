@@ -9,8 +9,13 @@ document.addEventListener('DOMContentLoaded', function() {
     generateBtn.addEventListener('click', async function() {
         
         // Validation
+        if (!document.getElementById('questionType').value) {
+            showToast("Please select a Strategic Lens before generating.");
+            return;
+        }
+
         if (!topicInput.value.trim()) {
-            alert("Please enter a Topic or Line of Enquiry.");
+            showToast("Please enter a Topic or Line of Enquiry.");
             return;
         }
 
@@ -46,16 +51,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
 
             if (data.error) {
-                alert("Error: " + data.error);
+                showToast("Error: " + data.error);
             } else if (data.prompts && data.prompts.length > 0) {
                 showResult(data.prompts[0]);
             } else {
-                alert("No prompt was returned. Please try again.");
+                showToast("No prompt was returned. Please try again.");
             }
 
         } catch (err) {
             console.error(err);
-            alert("Something went wrong connecting to the server.");
+            showToast("Something went wrong connecting to the server.");
         } finally {
             generateBtn.disabled = false;
             loader.classList.add('hidden');
