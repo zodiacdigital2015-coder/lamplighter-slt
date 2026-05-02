@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
             hasExternalDoc: document.getElementById('hasExternalDoc').checked,
             strictRedaction: document.getElementById('strictRedaction').checked,
 
-            // NEW: Audience and time pressure
+            // Audience and time pressure
             audience: document.getElementById('audience').value,
             timePressure: document.getElementById('timePressure').value,
         };
@@ -74,6 +74,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const copyBtn = document.getElementById('copy-copilot-1');
         const charWarning = document.getElementById('char-warning-1');
         const charCount = document.getElementById('char-count-1');
+        const reasonBox = document.getElementById('reason-box-1');
+        const reasonText = document.getElementById('reason-text-1');
 
         // Populate the prompt text
         textBox.textContent = promptData.copilot_prompt;
@@ -84,6 +86,14 @@ document.addEventListener('DOMContentLoaded', function() {
             charWarning.style.display = 'block';
         } else {
             charWarning.style.display = 'none';
+        }
+
+        // Show reason if available
+        if (promptData.reason_for_choosing) {
+            reasonText.textContent = promptData.reason_for_choosing;
+            reasonBox.style.display = 'flex';
+        } else {
+            reasonBox.style.display = 'none';
         }
 
         // Show the container and scroll to it

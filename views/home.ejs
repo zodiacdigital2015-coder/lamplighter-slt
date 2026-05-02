@@ -1,4 +1,4 @@
-<% const MAX_PROMPTS_ON_DISPLAY = 15; %>
+<% const MAX_PROMPTS_ON_DISPLAY = 1; %>
 
 <!DOCTYPE html>
 <html>
@@ -121,6 +121,40 @@
             font-size: 0.85rem; 
             line-height: 1.4;
             color: #334155;
+        }
+
+        .reason-box {
+            margin-top: 16px;
+            padding: 12px 15px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .reason-box .material-symbols-outlined {
+            color: #b45309;
+            font-size: 1.1rem;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .reason-box p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .reason-box strong {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #94a3b8;
+            margin-bottom: 3px;
         }
     </style>
 </head>
@@ -317,6 +351,13 @@
                             <div class="response-text" id="copilot-text-<%= i %>" style="font-size: 1rem; color: #334155; white-space: pre-wrap; line-height: 1.6;"></div>
                             <div id="char-warning-<%= i %>" style="display:none; margin-top:12px; padding: 10px 14px; background:#fef3c7; border:1px solid #f59e0b; border-radius:6px; font-size:0.85rem; color:#92400e;">
                                 ⚠️ This prompt is <span id="char-count-<%= i %>"></span> characters — over the 1,900 character Copilot limit. Please simplify your inputs and regenerate.
+                            </div>
+                            <div class="reason-box" id="reason-box-<%= i %>" style="display:none;">
+                                <span class="material-symbols-outlined">lightbulb</span>
+                                <div>
+                                    <strong>Why this prompt was shaped this way</strong>
+                                    <p id="reason-text-<%= i %>"></p>
+                                </div>
                             </div>
                             <button id="copy-copilot-<%= i %>" class="btn btn-primary btn-mini" style="width:100%; margin-top:20px;">
                                 Copy Prompt
